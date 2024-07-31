@@ -25,6 +25,30 @@ float cot(float x) {
 
 const float pi = float(M_PI);
 
+Vector3 Multiply(float scalar, const Vector3& v) {
+	Vector3 result;
+	result.x = v.x * scalar;
+	result.y = v.y * scalar;
+	result.z = v.z * scalar;
+	return result;
+}
+
+Vector3 Add(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x + v2.x;
+	result.y = v1.y + v2.y;
+	result.z = v1.z + v2.z;
+	return result;
+}
+
+Vector3 Subtract(const Vector3& v1, const Vector3& v2) {
+	Vector3 result;
+	result.x = v1.x - v2.x;
+	result.y = v1.y - v2.y;
+	result.z = v1.z - v2.z;
+	return result;
+}
+
 Matrix4x4 MakePerspectiveFovMatrix(float fovY, float aspectRatio, float nearClip, float farClip) {
 	Matrix4x4 result;
 	result = {
@@ -43,6 +67,28 @@ Matrix4x4 MakeVieportMatrix(float left, float top, float width, float height, fl
 		0,-height / 2,0,0,
 		0,0,maxDepth - minDepth,0,
 		left + (width / 2),top + (height / 2),minDepth,1
+	};
+	return result;
+}
+
+Matrix4x4 Add(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result;
+	result = {
+		m1.m[0][0] + m2.m[0][0],m1.m[0][1] + m2.m[0][1],m1.m[0][2] + m2.m[0][2],m1.m[0][3] + m2.m[0][3],
+		m1.m[1][0] + m2.m[1][0],m1.m[1][1] + m2.m[1][1],m1.m[1][2] + m2.m[1][2],m1.m[1][3] + m2.m[1][3],
+		m1.m[2][0] + m2.m[2][0],m1.m[2][1] + m2.m[2][1],m1.m[2][2] + m2.m[2][2],m1.m[2][3] + m2.m[2][3],
+		m1.m[3][0] + m2.m[3][0],m1.m[3][1] + m2.m[3][1],m1.m[3][2] + m2.m[3][2],m1.m[3][3] + m2.m[3][3]
+	};
+	return result;
+}
+
+Matrix4x4 Subtract(const Matrix4x4& m1, const Matrix4x4& m2) {
+	Matrix4x4 result;
+	result = {
+		m1.m[0][0] - m2.m[0][0],m1.m[0][1] - m2.m[0][1],m1.m[0][2] - m2.m[0][2],m1.m[0][3] - m2.m[0][3],
+		m1.m[1][0] - m2.m[1][0],m1.m[1][1] - m2.m[1][1],m1.m[1][2] - m2.m[1][2],m1.m[1][3] - m2.m[1][3],
+		m1.m[2][0] - m2.m[2][0],m1.m[2][1] - m2.m[2][1],m1.m[2][2] - m2.m[2][2],m1.m[2][3] - m2.m[2][3],
+		m1.m[3][0] - m2.m[3][0],m1.m[3][1] - m2.m[3][1],m1.m[3][2] - m2.m[3][2],m1.m[3][3] - m2.m[3][3]
 	};
 	return result;
 }
@@ -205,6 +251,52 @@ Vector3 Transform(Vector3 vector, Matrix4x4 matrix) {
 	return result;
 }
 
+#pragma region 演算子オーバーロード
+Vector3 operator+(const Vector3& v1, const Vector3& v2) { return Add(v1, v2); }
+Vector3 operator-(const Vector3& v1, const Vector3& v2) { return Subtract(v1, v2); }
+Vector3 operator*(float s, const Vector3& v) { return Multiply(s, v); }
+Vector3 operator*(const Vector3& v, float s) { return s * v; }
+Vector3 operator/(const Vector3& v, float s) { return Multiply(1.0f / s, v); }
+Matrix4x4 operator+(const Matrix4x4& m1, const Matrix4x4& m2) { return Add(m1, m2); }
+Matrix4x4 operator-(const Matrix4x4& m1, const Matrix4x4& m2) { return Subtract(m1, m2); }
+Matrix4x4 operator*(const Matrix4x4& m1, const Matrix4x4& m2) { return Multiply(m1, m2); }
+
+Vector3 operator-(const Vector3& v) { return { -v.x,-v.y,-v.z }; }
+Vector3 operator+(const Vector3& v) { return v; }
+
+Vector3& operator*=(Vector3& v, const float& s) {
+	v.x *= s;
+	v.y *= s;
+	v.z *= s;
+	Vector3& result = v;
+	return result;
+}
+
+Vector3& operator-=(Vector3& v1, const Vector3& v2) {
+	v1.x -= v2.x;
+	v1.y -= v2.y;
+	v1.z -= v2.z;
+	Vector3& result = v1;
+	return result;
+};
+
+Vector3& operator+=(Vector3& v1, const Vector3& v2) {
+	v1.x += v2.x;
+	v1.y += v2.y;
+	v1.z += v2.z;
+	Vector3& result = v1;
+	return result;
+};
+
+Vector3& operator/=(Vector3& v, const float& s) {
+	v.x /= s;
+	v.y /= s;
+	v.z /= s;
+	Vector3& result = v;
+	return result;
+};
+#pragma endregion
+
 void DrawGrid(const Matrix4x4& viewProjectionMatrix, const Matrix4x4& viewportMatrix) {
 
 	const float kGridHalfWidth = 2.0f;
@@ -338,16 +430,16 @@ int WINAPI WinMain(HINSTANCE, HINSTANCE, LPSTR, int) {
 		///
 
 		for (int32_t i = 0; i < 3; i++) {
-			sphere[i] = { translates[i],0.1f };
+			sphere[i] = { translate,0.05f};
 		}
 
 		shoulderWM = MakeAffineMatrix(scales[0], rotates[0], translates[0]);
-		elbowWM = Multiply(MakeAffineMatrix(scales[1], rotates[1], translates[1]), shoulderWM);
-		handWM = Multiply(Multiply(MakeAffineMatrix(scales[2], rotates[2], translates[2]), elbowWM), shoulderWM);
+		elbowWM = MakeAffineMatrix(scales[1], rotates[1], translates[1]);
+		handWM = MakeAffineMatrix(scales[2], rotates[2], translates[2]);
 
 		shoulderWVP = Multiply(shoulderWM, Multiply(viewMatrix, viewProjectionMatrix));
-		elbowWVP = Multiply(elbowWM, Multiply(viewMatrix, viewProjectionMatrix));
-		handWVP = Multiply(handWM, Multiply(viewMatrix, viewProjectionMatrix));
+		elbowWVP = Multiply(Multiply(elbowWM,shoulderWM), Multiply(viewMatrix, viewProjectionMatrix));
+		handWVP = Multiply(Multiply(handWM,Multiply(elbowWM,shoulderWM)), Multiply(viewMatrix, viewProjectionMatrix));
 
 		shoulderPoint = Transform(Transform(sphere[0].center, shoulderWVP), viewportMatrix);
 		elbowPoint = Transform(Transform(sphere[1].center, elbowWVP), viewportMatrix);
